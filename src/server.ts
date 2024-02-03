@@ -4,6 +4,8 @@ import cors from "cors";
 import logger from './utils/logger'
 import pool from './utils/db'
 import notFoundRoute from "./services/notFound/routes";
+import { logRequest } from './middlewares/loggerMiddleware';
+import { authenticateToken } from './middlewares/authMiddleware';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,10 +14,10 @@ app.use(express.json());
 app.use(cors());
 
 // Middleware for logging incoming requests
-app.use((req: Request, res: Response, next) => {
-  logger.info(`${req.method} ${req.path}`);
-  next();
-});
+app.use(logRequest);
+
+// Middleware for JWT authentication
+app.use(authenticateToken);
 
 app.get('/', (req: Request, res: Response) => {
   res.json('Hello, this is your TypeScript REST API!');
