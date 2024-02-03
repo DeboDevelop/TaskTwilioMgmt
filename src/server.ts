@@ -2,6 +2,8 @@ require("dotenv").config();
 import express, { Request, Response } from 'express';
 import cors from "cors";
 import logger from './utils/logger'
+import pool from './utils/db'
+import notFoundRoute from "./services/notFound/routes";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -16,22 +18,22 @@ app.use((req: Request, res: Response, next) => {
 });
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('Hello, this is your TypeScript REST API!');
+  res.json('Hello, this is your TypeScript REST API!');
 });
 
 // 404 route
-app.use((req: Request, res: Response) => {
-  res.status(404).send('Not Found');
-});
+app.use(notFoundRoute);
 
 // Graceful termination function
 const shutdown = async () => {
   logger.info("Received signal to terminate. Closing connections...");
   try {
-      process.exit(0);
+    await pool.end(); // Close all connections in the pool gracefully
+    logger.info("Database connections closed. Shutting down server...");
+    process.exit(0);
   } catch (error) {
-      logger.error("Error while closing connections:", error);
-      process.exit(1);
+    logger.error("Error while closing connections:", error);
+    process.exit(1);
   }
 };
 
